@@ -17,7 +17,7 @@
 import type { PixelRect } from "./regions.js";
 
 export const SHARPNESS_LONG_EDGE = 512;
-/** Rec. 709 luma weights; compute.ts re-exports them (they live here so this file imports nothing from it). */
+/** Rec. 709 luma weights, the luma of stats.ts too (they live here so this file imports nothing from it). */
 export const LUMA_WEIGHTS = { r: 0.2126, g: 0.7152, b: 0.0722 } as const;
 
 /** The resampled luma plane, and the scale from source pixels to it. */

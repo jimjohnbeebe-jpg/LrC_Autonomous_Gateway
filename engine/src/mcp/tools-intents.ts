@@ -101,6 +101,8 @@ async function fromPhoto(ctx: ToolContext, candidate: Record<string, unknown>): 
     ...(candidate["profile"] === undefined && look.profile ? { profile: look.profile } : {}),
     set: { ...look.set, ...own("set") },
     ...(Object.keys(setByPipeline).length ? { set_by_pipeline: setByPipeline } : {}),
+    // Phase 10 row 8: the photo the look came from is its reference, unless the candidate names its own.
+    references: candidate["references"] ?? { uuids: [photo.uuid] },
   };
   const info = {
     uuid: photo.uuid,

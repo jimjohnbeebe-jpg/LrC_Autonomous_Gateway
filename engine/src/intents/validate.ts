@@ -66,6 +66,7 @@ export function checkIntent(candidate: unknown, map: ParamMap): Intent {
   checkSet("", intent);
   if (intent.variants) for (const key of ["A", "B", "C"] as const) checkSet(`variants.${key}.`, intent.variants[key]);
   problems.push(...setProblems(intent, checkValues));
+  if (intent.references !== undefined && intent.schema_version < 3) problems.push("schema_version: references need schema_version 3");
   if (intent.profile !== undefined) problems.push(...profileProblems(map, intent.profile));
   if (problems.length > 0) throw new IntentError("invalid_intent", `the intent has invalid values: ${problems.join("; ")}`, problems);
   return intent;

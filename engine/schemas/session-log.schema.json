@@ -1020,6 +1020,244 @@
                       ],
                       "additionalProperties": false
                     }
+                  },
+                  "perceptual": {
+                    "type": "object",
+                    "properties": {
+                      "L": {
+                        "type": "object",
+                        "properties": {
+                          "p2": {
+                            "type": "number"
+                          },
+                          "p5": {
+                            "type": "number"
+                          },
+                          "p20": {
+                            "type": "number"
+                          },
+                          "p50": {
+                            "type": "number"
+                          },
+                          "p80": {
+                            "type": "number"
+                          },
+                          "p95": {
+                            "type": "number"
+                          },
+                          "p98": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "p2",
+                          "p5",
+                          "p20",
+                          "p50",
+                          "p80",
+                          "p95",
+                          "p98"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "zones": {
+                        "minItems": 11,
+                        "maxItems": 11,
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "cast": {
+                        "type": "object",
+                        "properties": {
+                          "sh": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "a": {
+                                    "type": "number"
+                                  },
+                                  "b": {
+                                    "type": "number"
+                                  },
+                                  "C": {
+                                    "type": "number"
+                                  },
+                                  "h": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "wheel": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "a",
+                                  "b",
+                                  "C",
+                                  "h",
+                                  "wheel"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "mid": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "a": {
+                                    "type": "number"
+                                  },
+                                  "b": {
+                                    "type": "number"
+                                  },
+                                  "C": {
+                                    "type": "number"
+                                  },
+                                  "h": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "wheel": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "a",
+                                  "b",
+                                  "C",
+                                  "h",
+                                  "wheel"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "hi": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "a": {
+                                    "type": "number"
+                                  },
+                                  "b": {
+                                    "type": "number"
+                                  },
+                                  "C": {
+                                    "type": "number"
+                                  },
+                                  "h": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "wheel": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "a",
+                                  "b",
+                                  "C",
+                                  "h",
+                                  "wheel"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "sh",
+                          "mid",
+                          "hi"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "bands": {
+                        "type": "object",
+                        "properties": {
+                          "red": {
+                            "type": "number"
+                          },
+                          "orange": {
+                            "type": "number"
+                          },
+                          "yellow": {
+                            "type": "number"
+                          },
+                          "green": {
+                            "type": "number"
+                          },
+                          "aqua": {
+                            "type": "number"
+                          },
+                          "blue": {
+                            "type": "number"
+                          },
+                          "purple": {
+                            "type": "number"
+                          },
+                          "magenta": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "red",
+                          "orange",
+                          "yellow",
+                          "green",
+                          "aqua",
+                          "blue",
+                          "purple",
+                          "magenta"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "cf": {
+                        "type": "number"
+                      },
+                      "rms": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "L",
+                      "zones",
+                      "cast",
+                      "bands",
+                      "cf",
+                      "rms"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -1407,6 +1645,244 @@
                   ],
                   "additionalProperties": false
                 }
+              },
+              "perceptual": {
+                "type": "object",
+                "properties": {
+                  "L": {
+                    "type": "object",
+                    "properties": {
+                      "p2": {
+                        "type": "number"
+                      },
+                      "p5": {
+                        "type": "number"
+                      },
+                      "p20": {
+                        "type": "number"
+                      },
+                      "p50": {
+                        "type": "number"
+                      },
+                      "p80": {
+                        "type": "number"
+                      },
+                      "p95": {
+                        "type": "number"
+                      },
+                      "p98": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "p2",
+                      "p5",
+                      "p20",
+                      "p50",
+                      "p80",
+                      "p95",
+                      "p98"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "zones": {
+                    "minItems": 11,
+                    "maxItems": 11,
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "cast": {
+                    "type": "object",
+                    "properties": {
+                      "sh": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "a": {
+                                "type": "number"
+                              },
+                              "b": {
+                                "type": "number"
+                              },
+                              "C": {
+                                "type": "number"
+                              },
+                              "h": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "wheel": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "a",
+                              "b",
+                              "C",
+                              "h",
+                              "wheel"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "mid": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "a": {
+                                "type": "number"
+                              },
+                              "b": {
+                                "type": "number"
+                              },
+                              "C": {
+                                "type": "number"
+                              },
+                              "h": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "wheel": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "a",
+                              "b",
+                              "C",
+                              "h",
+                              "wheel"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "hi": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "a": {
+                                "type": "number"
+                              },
+                              "b": {
+                                "type": "number"
+                              },
+                              "C": {
+                                "type": "number"
+                              },
+                              "h": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "wheel": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "a",
+                              "b",
+                              "C",
+                              "h",
+                              "wheel"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sh",
+                      "mid",
+                      "hi"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "bands": {
+                    "type": "object",
+                    "properties": {
+                      "red": {
+                        "type": "number"
+                      },
+                      "orange": {
+                        "type": "number"
+                      },
+                      "yellow": {
+                        "type": "number"
+                      },
+                      "green": {
+                        "type": "number"
+                      },
+                      "aqua": {
+                        "type": "number"
+                      },
+                      "blue": {
+                        "type": "number"
+                      },
+                      "purple": {
+                        "type": "number"
+                      },
+                      "magenta": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "red",
+                      "orange",
+                      "yellow",
+                      "green",
+                      "aqua",
+                      "blue",
+                      "purple",
+                      "magenta"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "cf": {
+                    "type": "number"
+                  },
+                  "rms": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "L",
+                  "zones",
+                  "cast",
+                  "bands",
+                  "cf",
+                  "rms"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
@@ -1720,6 +2196,244 @@
                       ],
                       "additionalProperties": false
                     }
+                  },
+                  "perceptual": {
+                    "type": "object",
+                    "properties": {
+                      "L": {
+                        "type": "object",
+                        "properties": {
+                          "p2": {
+                            "type": "number"
+                          },
+                          "p5": {
+                            "type": "number"
+                          },
+                          "p20": {
+                            "type": "number"
+                          },
+                          "p50": {
+                            "type": "number"
+                          },
+                          "p80": {
+                            "type": "number"
+                          },
+                          "p95": {
+                            "type": "number"
+                          },
+                          "p98": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "p2",
+                          "p5",
+                          "p20",
+                          "p50",
+                          "p80",
+                          "p95",
+                          "p98"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "zones": {
+                        "minItems": 11,
+                        "maxItems": 11,
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "cast": {
+                        "type": "object",
+                        "properties": {
+                          "sh": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "a": {
+                                    "type": "number"
+                                  },
+                                  "b": {
+                                    "type": "number"
+                                  },
+                                  "C": {
+                                    "type": "number"
+                                  },
+                                  "h": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "wheel": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "a",
+                                  "b",
+                                  "C",
+                                  "h",
+                                  "wheel"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "mid": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "a": {
+                                    "type": "number"
+                                  },
+                                  "b": {
+                                    "type": "number"
+                                  },
+                                  "C": {
+                                    "type": "number"
+                                  },
+                                  "h": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "wheel": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "a",
+                                  "b",
+                                  "C",
+                                  "h",
+                                  "wheel"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "hi": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "a": {
+                                    "type": "number"
+                                  },
+                                  "b": {
+                                    "type": "number"
+                                  },
+                                  "C": {
+                                    "type": "number"
+                                  },
+                                  "h": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "wheel": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "a",
+                                  "b",
+                                  "C",
+                                  "h",
+                                  "wheel"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "sh",
+                          "mid",
+                          "hi"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "bands": {
+                        "type": "object",
+                        "properties": {
+                          "red": {
+                            "type": "number"
+                          },
+                          "orange": {
+                            "type": "number"
+                          },
+                          "yellow": {
+                            "type": "number"
+                          },
+                          "green": {
+                            "type": "number"
+                          },
+                          "aqua": {
+                            "type": "number"
+                          },
+                          "blue": {
+                            "type": "number"
+                          },
+                          "purple": {
+                            "type": "number"
+                          },
+                          "magenta": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "red",
+                          "orange",
+                          "yellow",
+                          "green",
+                          "aqua",
+                          "blue",
+                          "purple",
+                          "magenta"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "cf": {
+                        "type": "number"
+                      },
+                      "rms": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "L",
+                      "zones",
+                      "cast",
+                      "bands",
+                      "cf",
+                      "rms"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -2156,6 +2870,244 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "perceptual": {
+                          "type": "object",
+                          "properties": {
+                            "L": {
+                              "type": "object",
+                              "properties": {
+                                "p2": {
+                                  "type": "number"
+                                },
+                                "p5": {
+                                  "type": "number"
+                                },
+                                "p20": {
+                                  "type": "number"
+                                },
+                                "p50": {
+                                  "type": "number"
+                                },
+                                "p80": {
+                                  "type": "number"
+                                },
+                                "p95": {
+                                  "type": "number"
+                                },
+                                "p98": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "p2",
+                                "p5",
+                                "p20",
+                                "p50",
+                                "p80",
+                                "p95",
+                                "p98"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "zones": {
+                              "minItems": 11,
+                              "maxItems": 11,
+                              "type": "array",
+                              "items": {
+                                "type": "number"
+                              }
+                            },
+                            "cast": {
+                              "type": "object",
+                              "properties": {
+                                "sh": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "a": {
+                                          "type": "number"
+                                        },
+                                        "b": {
+                                          "type": "number"
+                                        },
+                                        "C": {
+                                          "type": "number"
+                                        },
+                                        "h": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        },
+                                        "wheel": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "a",
+                                        "b",
+                                        "C",
+                                        "h",
+                                        "wheel"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "mid": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "a": {
+                                          "type": "number"
+                                        },
+                                        "b": {
+                                          "type": "number"
+                                        },
+                                        "C": {
+                                          "type": "number"
+                                        },
+                                        "h": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        },
+                                        "wheel": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "a",
+                                        "b",
+                                        "C",
+                                        "h",
+                                        "wheel"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hi": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "a": {
+                                          "type": "number"
+                                        },
+                                        "b": {
+                                          "type": "number"
+                                        },
+                                        "C": {
+                                          "type": "number"
+                                        },
+                                        "h": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        },
+                                        "wheel": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "a",
+                                        "b",
+                                        "C",
+                                        "h",
+                                        "wheel"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "sh",
+                                "mid",
+                                "hi"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "bands": {
+                              "type": "object",
+                              "properties": {
+                                "red": {
+                                  "type": "number"
+                                },
+                                "orange": {
+                                  "type": "number"
+                                },
+                                "yellow": {
+                                  "type": "number"
+                                },
+                                "green": {
+                                  "type": "number"
+                                },
+                                "aqua": {
+                                  "type": "number"
+                                },
+                                "blue": {
+                                  "type": "number"
+                                },
+                                "purple": {
+                                  "type": "number"
+                                },
+                                "magenta": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "red",
+                                "orange",
+                                "yellow",
+                                "green",
+                                "aqua",
+                                "blue",
+                                "purple",
+                                "magenta"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "cf": {
+                              "type": "number"
+                            },
+                            "rms": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "L",
+                            "zones",
+                            "cast",
+                            "bands",
+                            "cf",
+                            "rms"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -3035,6 +3987,244 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "perceptual": {
+                      "type": "object",
+                      "properties": {
+                        "L": {
+                          "type": "object",
+                          "properties": {
+                            "p2": {
+                              "type": "number"
+                            },
+                            "p5": {
+                              "type": "number"
+                            },
+                            "p20": {
+                              "type": "number"
+                            },
+                            "p50": {
+                              "type": "number"
+                            },
+                            "p80": {
+                              "type": "number"
+                            },
+                            "p95": {
+                              "type": "number"
+                            },
+                            "p98": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "p2",
+                            "p5",
+                            "p20",
+                            "p50",
+                            "p80",
+                            "p95",
+                            "p98"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "zones": {
+                          "minItems": 11,
+                          "maxItems": 11,
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        "cast": {
+                          "type": "object",
+                          "properties": {
+                            "sh": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "a": {
+                                      "type": "number"
+                                    },
+                                    "b": {
+                                      "type": "number"
+                                    },
+                                    "C": {
+                                      "type": "number"
+                                    },
+                                    "h": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "wheel": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "a",
+                                    "b",
+                                    "C",
+                                    "h",
+                                    "wheel"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "mid": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "a": {
+                                      "type": "number"
+                                    },
+                                    "b": {
+                                      "type": "number"
+                                    },
+                                    "C": {
+                                      "type": "number"
+                                    },
+                                    "h": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "wheel": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "a",
+                                    "b",
+                                    "C",
+                                    "h",
+                                    "wheel"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "hi": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "a": {
+                                      "type": "number"
+                                    },
+                                    "b": {
+                                      "type": "number"
+                                    },
+                                    "C": {
+                                      "type": "number"
+                                    },
+                                    "h": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "wheel": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "a",
+                                    "b",
+                                    "C",
+                                    "h",
+                                    "wheel"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "sh",
+                            "mid",
+                            "hi"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "bands": {
+                          "type": "object",
+                          "properties": {
+                            "red": {
+                              "type": "number"
+                            },
+                            "orange": {
+                              "type": "number"
+                            },
+                            "yellow": {
+                              "type": "number"
+                            },
+                            "green": {
+                              "type": "number"
+                            },
+                            "aqua": {
+                              "type": "number"
+                            },
+                            "blue": {
+                              "type": "number"
+                            },
+                            "purple": {
+                              "type": "number"
+                            },
+                            "magenta": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "red",
+                            "orange",
+                            "yellow",
+                            "green",
+                            "aqua",
+                            "blue",
+                            "purple",
+                            "magenta"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "cf": {
+                          "type": "number"
+                        },
+                        "rms": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "L",
+                        "zones",
+                        "cast",
+                        "bands",
+                        "cf",
+                        "rms"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -3590,6 +4780,338 @@
         ],
         "additionalProperties": false
       }
+    },
+    "references": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "begin",
+            "intent"
+          ]
+        },
+        "collection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uuids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "measured": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uuid": {
+                "type": "string"
+              },
+              "perceptual": {
+                "type": "object",
+                "properties": {
+                  "L": {
+                    "type": "object",
+                    "properties": {
+                      "p2": {
+                        "type": "number"
+                      },
+                      "p5": {
+                        "type": "number"
+                      },
+                      "p20": {
+                        "type": "number"
+                      },
+                      "p50": {
+                        "type": "number"
+                      },
+                      "p80": {
+                        "type": "number"
+                      },
+                      "p95": {
+                        "type": "number"
+                      },
+                      "p98": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "p2",
+                      "p5",
+                      "p20",
+                      "p50",
+                      "p80",
+                      "p95",
+                      "p98"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "zones": {
+                    "minItems": 11,
+                    "maxItems": 11,
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "cast": {
+                    "type": "object",
+                    "properties": {
+                      "sh": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "a": {
+                                "type": "number"
+                              },
+                              "b": {
+                                "type": "number"
+                              },
+                              "C": {
+                                "type": "number"
+                              },
+                              "h": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "wheel": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "a",
+                              "b",
+                              "C",
+                              "h",
+                              "wheel"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "mid": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "a": {
+                                "type": "number"
+                              },
+                              "b": {
+                                "type": "number"
+                              },
+                              "C": {
+                                "type": "number"
+                              },
+                              "h": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "wheel": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "a",
+                              "b",
+                              "C",
+                              "h",
+                              "wheel"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "hi": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "a": {
+                                "type": "number"
+                              },
+                              "b": {
+                                "type": "number"
+                              },
+                              "C": {
+                                "type": "number"
+                              },
+                              "h": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "wheel": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "a",
+                              "b",
+                              "C",
+                              "h",
+                              "wheel"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sh",
+                      "mid",
+                      "hi"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "bands": {
+                    "type": "object",
+                    "properties": {
+                      "red": {
+                        "type": "number"
+                      },
+                      "orange": {
+                        "type": "number"
+                      },
+                      "yellow": {
+                        "type": "number"
+                      },
+                      "green": {
+                        "type": "number"
+                      },
+                      "aqua": {
+                        "type": "number"
+                      },
+                      "blue": {
+                        "type": "number"
+                      },
+                      "purple": {
+                        "type": "number"
+                      },
+                      "magenta": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "red",
+                      "orange",
+                      "yellow",
+                      "green",
+                      "aqua",
+                      "blue",
+                      "purple",
+                      "magenta"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "cf": {
+                    "type": "number"
+                  },
+                  "rms": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "L",
+                  "zones",
+                  "cast",
+                  "bands",
+                  "cf",
+                  "rms"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "uuid",
+              "perceptual"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "aggregate": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "med": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "min",
+                  "med",
+                  "max",
+                  "n"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "source",
+        "collection",
+        "uuids",
+        "measured",
+        "warnings",
+        "aggregate"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

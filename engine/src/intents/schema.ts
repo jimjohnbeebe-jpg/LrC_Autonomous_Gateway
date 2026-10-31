@@ -1,4 +1,4 @@
-// The intent file (v3 = v2 + set; v2): MCP_TOOLS "Intent JSON schema", PRD section 6.9, ARCHITECTURE section 7;
+// The intent file (v3 = v2 + set and references; v2): MCP_TOOLS "Intent JSON schema", PRD section 6.9, ARCHITECTURE section 7;
 // v2 names each pipeline's profile and white balance (PHASE8_PLAN row 4, decision D5 A [stated: Jim,
 // 2026-10-08, "Go with recommendations"]; I1 A v2 only, I2 A profile optional but naming both, I3 B no
 // rendered white-balance priors in the bundled intents [stated: Jim, 2026-10-09, "Go"]).
@@ -20,7 +20,7 @@ import type { Pipeline } from "../params/index.js";
 export const INTENT_ID_PATTERN = /^[a-z0-9][a-z0-9_]{0,63}$/;
 /** The region kinds of lr_set_regions (MCP_TOOLS). */
 export const REGION_KINDS = ["skin", "fur", "sky", "custom"] as const;
-/** The version lr_save_intent writes; v3 is v2 plus `set` and `set_by_pipeline` (PHASE10_PLAN "Second re-plan", row 5). */
+/** The version lr_save_intent writes; v3 is v2 plus `set` and `set_by_pipeline` (PHASE10_PLAN "Second re-plan", row 5) and `references` (row 8). */
 export const INTENT_SCHEMA_VERSION = 3;
 /** The versions the loader reads: v2 files keep loading. */
 export const SUPPORTED_INTENT_SCHEMA_VERSIONS: readonly number[] = [2, 3];
@@ -60,9 +60,20 @@ const variant = z.strictObject({
 
 const percent = z.number().min(0).max(100);
 
+/** The fields of `references` (schema v3, Phase 10 row 8; session\references.ts); lr_begin_session takes them in a loose object, where an empty one is ignored. */
+export const referencesShape = {
+  uuids: z.array(z.string().min(1)).min(1).max(8).optional().describe("1-8 catalog photo uuids"),
+  collection: z.string().min(1).max(200).optional().describe('a catalog collection by name, or "Set / Name"; its first 8 photos are used'),
+};
+/** Reference photos in an intent: at least one of the fields. */
+export const referencesSchema = z
+  .strictObject(referencesShape)
+  .refine((r) => r.uuids !== undefined || r.collection !== undefined, "give uuids, a collection, or both")
+  .describe("photos the session measures at begin; every pass then reports where the photo lies against their range (reported only, never a target)");
+
 export const intentSchema = z
   .strictObject({
-    schema_version: z.union([z.literal(2), z.literal(3)]).describe("3 (2 still loads, without set)"),
+    schema_version: z.union([z.literal(2), z.literal(3)]).describe("3 (2 still loads, without set and references)"),
     id: z.string().regex(INTENT_ID_PATTERN).describe("lower case letters, digits and _; the file is <id>.json"),
     label: z.string().min(1).max(80),
     category: z.string().min(1).max(40),
@@ -90,6 +101,7 @@ export const intentSchema = z
     regions_expected: z.array(z.enum(REGION_KINDS)).optional(),
     convergence_hints: z.array(z.string().min(1).max(300)).optional(),
     allow_probe: z.boolean().optional().describe("lr_probe is off in autonomous mode unless this is true"),
+    references: referencesSchema.optional(),
   })
   .describe("LrC-AVG intent, schema v3 (v2 still loads)");
 

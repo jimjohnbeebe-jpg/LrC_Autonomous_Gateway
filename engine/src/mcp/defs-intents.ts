@@ -10,7 +10,7 @@ const saveIntentArgs = z.object({
     .record(z.string(), z.unknown())
     .describe(
       "the intent object (schema v3, `schema_version: 3`; see lr_get_intent for an example). Required fields: schema_version, id, label, category, brief, priors " +
-        "(may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set and set_by_pipeline",
+        "(may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set, set_by_pipeline and references (the photo's uuid)",
     ),
   // A boolean rather than literal(true), so that false reaches the tool and gets NOT_CONFIRMED
   // rather than a generic INVALID_ARGUMENTS (Greptile, PR #22).
@@ -50,7 +50,8 @@ export const INTENT_DEFS: ToolDef[] = [
       "photo of that pipeline: temperature and tint, Kelvin on raw, relative -100..100 on rendered), `variants` (A/B/C prior sets, " +
       "each with `priors` and optionally `priors_by_pipeline`), " +
       "`guardrail_overrides` (clipping limits replacing the defaults of 0.5 % high and 1.0 % low), `regions_expected`, " +
-      "`convergence_hints`, `allow_probe` and `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default). " +
+      "`convergence_hints`, `allow_probe`, `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default) and `references` " +
+      "(v3: reference photos by `uuids` and/or `collection`, measured at lr_begin_session; each pass reports where the photo lies against them, never a target). " +
       "Changes nothing; does not need Lightroom.",
     schema: getIntentArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

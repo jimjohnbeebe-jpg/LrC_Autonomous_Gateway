@@ -21,45 +21,14 @@ import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { aiTraceSchema, maskPassSchema } from "./mask-log.js";
+import { box, metricsDeltaSchema, metricsSummarySchema, referencesLogSchema } from "./metrics-log.js";
+
+export { metricsDeltaSchema, metricsSummarySchema };
 
 export const SESSION_LOG_SCHEMA_ID = "lrc-avg/session-log/2";
 export const RECIPE_SCHEMA_ID = "lrc-avg/recipe/1";
 
-const perChannel = z.strictObject({ r: z.number(), g: z.number(), b: z.number() });
-const percentiles = z.strictObject({ p1: z.number(), p5: z.number(), p50: z.number(), p95: z.number(), p99: z.number() });
-const box = z.strictObject({ x: z.number(), y: z.number(), w: z.number(), h: z.number() });
 const cropViewSchema = z.strictObject({ box, angle: z.number(), aspect: z.number() });
-const rect = z.strictObject({ left: z.number(), top: z.number(), width: z.number(), height: z.number() });
-
-const deltaShape = {
-  luma_mean: z.number(),
-  luma_std: z.number(),
-  luma_percentiles: percentiles,
-  dynamic_range: z.number(),
-  channel_mean: perChannel,
-  rb_ratio: z.number().nullable(),
-  clip_high_pct: z.number(),
-  // Engine 1.1.0 (issue #186); logs written before it have none.
-  clip_high_tone_pct: z.number().optional(),
-  clip_low_pct: z.number(),
-  clip_high_pct_by_channel: perChannel,
-  clip_low_pct_by_channel: perChannel,
-  saturation_mean: z.number(),
-  chromatic_pct: z.number(),
-  hue_mean: z.number().nullable(),
-  // Issue #216 (metrics\sharpness.ts, the engine after 1.4.0); logs written before it have none.
-  sharpness: z.number().nullable().optional(),
-};
-const statsShape = { ...deltaShape, hue_histogram: z.array(z.number()).length(12) };
-
-export const metricsSummarySchema = z.strictObject({
-  ...statsShape,
-  regions: z.array(z.strictObject({ label: z.string(), box, rect, pixels: z.number(), ...statsShape })),
-});
-export const metricsDeltaSchema = z.strictObject({
-  ...deltaShape,
-  regions: z.array(z.strictObject({ label: z.string(), ...deltaShape })),
-});
 
 export const canonicalValueSchema = z.union([z.number(), z.boolean(), z.string(), z.array(z.number())]);
 export const canonicalSettingsSchema = z.record(z.string(), canonicalValueSchema);
@@ -290,6 +259,8 @@ export const sessionLogSchema = z
     hud_events: z.array(hudEventSchema).optional(),
     /** Engine 0.9.0: every approval of a pass (approve_each_pass mode), in order. */
     approvals: z.array(z.strictObject({ at: z.string(), target: targetIdSchema, pass: z.number().int(), by: approvalBySchema })).optional(),
+    /** Phase 10 row 8 (metrics-log.ts): the reference photos the passes were compared with. */
+    references: referencesLogSchema.optional(),
   })
   .describe("LrC-AVG session log, schema v2");
 

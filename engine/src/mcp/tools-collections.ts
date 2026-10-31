@@ -7,6 +7,7 @@
 
 import { CATALOG_READ_TIMEOUT_MS, MAX_COLLECTION_PHOTOS, searchCriteria, type SearchFilters } from "../library/index.js";
 import { UNANSWERED, WRITE_TIMEOUT_MS, mayHaveLanded } from "../sync/target.js";
+import { SET_SEPARATOR, findCollection } from "./collection-find.js";
 import { ToolError, toToolError } from "./errors.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
@@ -14,8 +15,6 @@ import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from
 export const TRANSFER_PLUGIN = "0.17.0";
 /** import_photo's stack_with came with this plugin (issue #139); an older one imports the file unstacked. */
 export const IMPORT_STACK_PLUGIN = "1.9.0";
-/** How lr_list_collections writes a set path, and lr_create_collection reads it. */
-export const SET_SEPARATOR = " / ";
 
 export type CreateCollectionArgs = { name: string; set?: string | undefined };
 export type AddToCollectionArgs = { collection_id: number; uuids: string[]; remove?: boolean | undefined };
@@ -92,28 +91,6 @@ export async function addToCollection(ctx: ToolContext, args: AddToCollectionArg
 
 // --- Issue #218 row 7 (plugin 1.5.0, CollectionEdit.lua): collections by name, smart collections, delete.
 
-type Listed = { local_id: number; name: string; set_path?: string | undefined; smart: boolean; photo_count: number };
-const fold = (s: string): string => s.split("/").map((t) => t.trim().toLowerCase()).join("/");
-const pathOf = (c: Listed): string => (c.set_path ? `${c.set_path}${SET_SEPARATOR}${c.name}` : c.name);
-
-/**
- * The collection a name or "Set / Name" path means, case aside: a listed path first, then a bare name, as
- * upstream resolves them [upstream claim: Automaat/lightroom-mcp@1040453 plugin/LightroomMCP.lrplugin/
- * HandlerCollections.lua:212-259]. A name several collections share is refused with the candidates (upstream fix #272).
- */
-export async function findCollection(ctx: ToolContext, name: string): Promise<Listed> {
-  const res = await ctx.deps.client.request("list_collections", {}, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
-  const want = fold(name);
-  const byPath = res.collections.filter((c) => fold(pathOf(c)) === want);
-  const found = byPath.length > 0 ? byPath : res.collections.filter((c) => fold(c.name) === want);
-  if (found.length === 0) throw new ToolError("UNKNOWN_COLLECTION", `No collection is named "${name}". lr_list_collections lists them.`, false);
-  if (found.length > 1) {
-    const candidates = found.map((c) => ({ id: c.local_id, name: c.name, set: c.set_path ?? null, smart: c.smart }));
-    throw new ToolError("AMBIGUOUS_COLLECTION", `${found.length} collections are named "${name}": give its set path ("Set / Name") or its id.`, false, { candidates });
-  }
-  return found[0] as Listed;
-}
-
 export type CreateSmartArgs = SearchFilters & { name: string; set?: string | undefined };
 export type DeleteCollectionArgs = { collection_id?: number | undefined; collection?: string | undefined; confirm: boolean };
 
@@ -151,7 +128,7 @@ export async function deleteCollection(ctx: ToolContext, args: DeleteCollectionA
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     return sessions.whenIdle("lr_delete_collection", async () => {
-      const id = args.collection_id ?? (await findCollection(ctx, args.collection ?? "")).local_id;
+      const id = args.collection_id ?? (await findCollection(ctx.deps.client, args.collection ?? "")).local_id;
       const r = await ctx.deps.client.request("delete_collection", { collection_id: id }, { timeoutMs: WRITE_TIMEOUT_MS });
       const undo = r.before.smart
         ? "To make it again, call lr_create_smart_collection with the same name and the rules in `before.search_description`."

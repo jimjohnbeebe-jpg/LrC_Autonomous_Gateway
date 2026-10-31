@@ -15,6 +15,7 @@ import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview
 import { SessionManager, endedError } from "../session/index.js";
 import type { KnownLogFolders, PageSettings } from "../settings/index.js";
 import { callLogFields } from "./call-context.js";
+import { collectionPhotos } from "./collection-find.js";
 import { ToolError, toToolError } from "./errors.js";
 
 /**
@@ -158,6 +159,9 @@ export function createContext(deps: ToolsDeps): ToolContext {
           map: deps.map,
           intents: deps.intents,
           render: (r) => renderRequest(ctx, { longEdge: r.longEdge, quality: r.quality, targetUuid: r.targetUuid, regions: r.regions, measureEdge: r.measureEdge }),
+          // Phase 10 row 8 (session\references.ts): by photo_uuid, so not the last render (ctx.last) and not the selection (bridge\protocol.ts:78-81).
+          renderReference: (r) => deps.previews.render({ longEdge: r.longEdge, quality: r.quality, photoUuid: r.uuid, measureEdge: r.measureEdge }),
+          collectionPhotos: (name, limit) => collectionPhotos(deps.client, name, limit),
           logDir: deps.sessionLogDir,
           ...(settings ? { readPage: () => settings.read() } : {}),
           ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),

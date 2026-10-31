@@ -26,6 +26,7 @@ describe.each(PIPELINES)("save this edit as a look (%s pipeline)", (pipeline) =>
     expect(out.json).toMatchObject({ ok: true, dry_run: true, written: false, from_photo: { pipeline } });
     const intent = out.json["intent"] as { schema_version: number; set: Record<string, unknown>; set_by_pipeline: Record<string, Record<string, unknown>>; profile?: unknown };
     expect(intent.schema_version).toBe(3);
+    expect((intent as { references?: unknown }).references).toEqual({ uuids: ["SIM-UUID"] }); // the source photo (Phase 10 row 8)
     expect(intent.set).toMatchObject({ exposure: 0.85, contrast: 25, clarity: 12 });
     expect(Object.keys(intent.set_by_pipeline)).toEqual([pipeline]);
     expect(intent.set_by_pipeline[pipeline]).toMatchObject({ temperature });
@@ -43,6 +44,9 @@ describe.each(PIPELINES)("save this edit as a look (%s pipeline)", (pipeline) =>
     Object.assign(lr.settings, { Exposure2012: -0.4, Contrast2012: -10, Clarity2012: 0 });
     const begun = await tools.beginSession({ intent_id: "my_edit", return_image: "none" });
     expect(begun.json["ok"]).toBe(true);
+    // The look's reference, its source photo, rendered through the tools' preview service at begin (Phase 10 row 8).
+    expect(begun.json["references"]).toMatchObject({ source: "intent", measured: ["SIM-UUID"] });
+    expect(begun.json["reference_gap"]).toMatchObject({ n: 1, "L.p50": { at: expect.any(String) } });
     const after = map.fromSdk(lr.settings).settings;
     expect(after).toMatchObject({ exposure: 0.85, contrast: 25, clarity: 12, temperature });
   });

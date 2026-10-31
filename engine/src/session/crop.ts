@@ -20,6 +20,7 @@ import { deltaMetrics, summarize as metricsOf } from "../metrics/index.js";
 import { cropDiffers, cropFrame, cropKeys, cropSettings, cropView, needsSize, type CropFrame, type CropRequest, type SdkSettings } from "../params/index.js";
 import { awaitApproval } from "./approval.js";
 import { bridge, brief, describe, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeSdk } from "./io.js";
+import { gapJson } from "./references.js";
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CropArgs, Rendered, Session, SessionContext, SessionOutput, Target } from "./types.js";
 
@@ -105,7 +106,7 @@ export async function cropPass(ctx: SessionContext, s: Session, args: CropArgs):
     const regionsNote = cleared.length > 0 ? { regions_cleared: cleared, regions_note: "The session's regions were cleared: their boxes were in the preview before the crop. Call lr_set_regions again on this preview." } : {};
     const json = {
       ok: true, session_id: s.id, target: t.id, pass: `${n}/${s.maxPasses}`, crop, history_names: [name], ...regionsNote,
-      metrics: metricsOf(rendered.metrics), delta_metrics: delta, cap_reached: t.endReason === "cap_reached", passes_left: s.maxPasses - n,
+      metrics: metricsOf(rendered.metrics), delta_metrics: delta, ...gapJson(s, rendered.metrics), cap_reached: t.endReason === "cap_reached", passes_left: s.maxPasses - n,
       ...(approval ? { approval } : {}), ...describe(rendered), timings: { total_ms: ms(started) },
     };
     const img = await image(s, args.return_image ?? "after", baseline, rendered, `pass ${n - 1}`, `pass ${n}`);

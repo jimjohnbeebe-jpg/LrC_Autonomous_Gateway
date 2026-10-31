@@ -327,3 +327,5 @@ export function aiError(m: Component): number | null {
 }
 
 export const components = (e: Correction): Component[] => e[C.masks] as Component[];
+/** A correction's Amount (CorrectionAmount), 1 when absent [inference: lr_create_mask writes 1, mask-ops.ts newCorrection]; Lightroom stores amounts below 1 [handle: docs\reports\phase8\probes\kinds.json `"CorrectionAmount": 0.66`]. */
+export const amountOf = (e: Correction): number => Number(e[C.amount] ?? 1);

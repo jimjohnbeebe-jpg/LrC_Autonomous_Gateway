@@ -44,7 +44,7 @@ import { PRESET_DEFS } from "./defs-presets.js";
 import { SESSION_DEFS } from "./defs-session.js";
 import type { ToolDef } from "./defs-shared.js";
 import { ToolError, toToolError } from "./errors.js";
-import { getPrompt, PROMPTS } from "./prompts.js";
+import { getPrompt, listPrompts } from "./prompts.js";
 import { PROFILE_ENV, profileDefs, toolProfile } from "./profiles.js";
 import { capImage } from "./image-cap.js";
 import type { Tools } from "./tools.js";
@@ -126,8 +126,10 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
     })),
   }));
 
-  server.setRequestHandler("prompts/list", () => ({ prompts: PROMPTS }));
-  server.setRequestHandler("prompts/get", (request) => getPrompt(request.params.name, request.params.arguments));
+  // One prompt per intent, read from the library on each call (prompts.ts). `looks` is absent on the stub Tools some tests pass.
+  const looks = () => tools.looks?.() ?? [];
+  server.setRequestHandler("prompts/list", () => ({ prompts: listPrompts(looks()) }));
+  server.setRequestHandler("prompts/get", (request) => getPrompt(request.params.name, request.params.arguments, looks()));
 
   server.setRequestHandler("tools/call", (request, ctx) => {
     const { name } = request.params;

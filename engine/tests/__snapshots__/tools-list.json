@@ -306,6 +306,15 @@
               "maxLength": 200
             }
           }
+        },
+        "tone_mode": {
+          "description": "how pass 0 treats the look's tones, replacing the intent's (default \"set\"): \"set\" writes them as given; \"adapt\" writes them as a start to adapt toward the references; \"auto\" runs Lightroom's Auto Tone first and skips them (its History step has Lightroom's own name)",
+          "type": "string",
+          "enum": [
+            "set",
+            "auto",
+            "adapt"
+          ]
         }
       }
     },
@@ -1900,7 +1909,7 @@
   {
     "name": "lr_get_intent",
     "title": "Get an editing intent",
-    "description": "Return one intent in full (schema v3, or v2): `brief` (instructions for the edit), `profile` (the profile pass 0 sets on a raw photo and on a rendered one: JPEG, TIFF, PNG …), `set` and `set_by_pipeline` (v3, a look: values written at pass 0 as given), `priors` (both pipelines; applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given), `priors_by_pipeline` (`raw` / `rendered`, added on a photo of that pipeline: temperature and tint, Kelvin on raw, relative -100..100 on rendered), `variants` (A/B/C prior sets, each with `priors` and optionally `priors_by_pipeline`), `guardrail_overrides` (clipping limits replacing the defaults of 0.5 % high and 1.0 % low), `regions_expected`, `convergence_hints`, `allow_probe`, `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default) and `references` (v3: reference photos by `uuids` and/or `collection`, measured at lr_begin_session; each pass reports where the photo lies against them, never a target). Changes nothing; does not need Lightroom.",
+    "description": "Return one intent in full (schema v3, or v2): `brief` (instructions for the edit), `profile` (the profile pass 0 sets on a raw photo and on a rendered one: JPEG, TIFF, PNG …), `set` and `set_by_pipeline` (v3, a look: values written at pass 0 as given), `priors` (both pipelines; applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given), `priors_by_pipeline` (`raw` / `rendered`, added on a photo of that pipeline: temperature and tint, Kelvin on raw, relative -100..100 on rendered), `variants` (A/B/C prior sets, each with `priors` and optionally `priors_by_pipeline`), `guardrail_overrides` (clipping limits replacing the defaults of 0.5 % high and 1.0 % low), `regions_expected`, `convergence_hints`, `allow_probe`, `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default) and `references` (v3: reference photos by `uuids` and/or `collection`, measured at lr_begin_session; each pass reports where the photo lies against them, never a target), `tone_mode` (v3: \"set\", \"adapt\" or \"auto\"; lr_begin_session's tone_mode) and `masks` (v3: AI masks with no geometry, returned in the session's brief for you to create with lr_create_mask and adjust). Changes nothing; does not need Lightroom.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1932,7 +1941,7 @@
             "type": "string"
           },
           "additionalProperties": {},
-          "description": "the intent object (schema v3, `schema_version: 3`; see lr_get_intent for an example). Required fields: schema_version, id, label, category, brief, priors (may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set, set_by_pipeline and references (the photo's uuid)"
+          "description": "the intent object (schema v3, `schema_version: 3`; see lr_get_intent for an example). Required fields: schema_version, id, label, category, brief, priors (may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set, set_by_pipeline, references (the photo's uuid), tone_mode and masks (with from_preset: profile, set, set_by_pipeline)"
         },
         "confirmed": {
           "type": "boolean",
@@ -1943,8 +1952,14 @@
           "type": "boolean"
         },
         "from_photo": {
-          "description": "true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`; only with dry_run (save the returned intent)",
+          "description": "true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`, its AI masks that need no point into `masks` (kind, name, sliders; no geometry), tone_mode \"adapt\"; only with dry_run (save the returned intent)",
           "type": "boolean"
+        },
+        "from_preset": {
+          "description": "a Develop preset's uuid or name (lr_list_presets): its settings, by canonical name, into `set`; keys no canonical name reads are dropped and listed; only with dry_run, as from_photo",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
         },
         "dry_run": {
           "description": "true: validate and return the intent as it would be saved; nothing is written",

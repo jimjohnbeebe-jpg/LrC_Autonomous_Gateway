@@ -14,7 +14,7 @@
           "const": 3
         }
       ],
-      "description": "3 (2 still loads, without set and references)"
+      "description": "3 (2 still loads, without set, references, tone_mode and masks)"
     },
     "id": {
       "type": "string",
@@ -620,6 +620,82 @@
       },
       "additionalProperties": false,
       "description": "photos the session measures at begin; every pass then reports where the photo lies against their range (reported only, never a target)"
+    },
+    "tone_mode": {
+      "description": "v3: \"set\" (default) writes the tonal values as given; \"adapt\" writes them as a start to adapt toward the references; \"auto\" runs Lightroom Auto Tone first and skips them",
+      "type": "string",
+      "enum": [
+        "set",
+        "auto",
+        "adapt"
+      ]
+    },
+    "masks": {
+      "description": "v3: up to 6 AI masks with no geometry; the session returns them in its brief, and the AI creates and adjusts them for each photo",
+      "maxItems": 6,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "subject",
+              "sky",
+              "background",
+              "landscape_architecture",
+              "landscape_mountains",
+              "landscape_artificial_ground",
+              "landscape_natural_ground",
+              "landscape_vegetation",
+              "landscape_sky",
+              "landscape_water",
+              "landscape_snow",
+              "people_face_skin",
+              "people_iris_pupil",
+              "people_body_skin",
+              "people_hair",
+              "people_lips",
+              "people_facial_hair",
+              "people_eye_sclera",
+              "people_eyebrows",
+              "people_clothes",
+              "people_teeth"
+            ],
+            "description": "an AI kind Lightroom finds with no point: subject, sky, background, landscape_*, people_* (every person)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "the name the Masks panel shows, e.g. \"1. Sky - Deepen\""
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "what the mask is for, in a sentence or two"
+          },
+          "sliders": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "local slider -> starting value in the Masking panel's units (lr_create_mask's sliders: local.exposure, local.clarity, ...)"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "purpose",
+          "sliders"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

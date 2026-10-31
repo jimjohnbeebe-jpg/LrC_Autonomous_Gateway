@@ -27,6 +27,7 @@
 // both go through the same code. Every call is written to the tool log.
 
 import type { Deck, HudPublisher } from "../hud/index.js";
+import type { IntentSummary } from "../intents/index.js";
 import type { ApproveArgs, BeginArgs, CreateMaskArgs, CropArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolLogPendingRecord } from "../log/index.js";
 import { callLogFields } from "./call-context.js";
@@ -100,6 +101,11 @@ export class Tools {
   /** The open session's HUD note while an operation runs, for MCP progress notifications (server.ts); null otherwise. */
   progressNote(): string | null {
     return this.ctx.sessions?.workNote() ?? null;
+  }
+
+  /** The usable intents, for the look prompts (prompts.ts); none without the library. Reads the folders, never Lightroom. */
+  looks(): IntentSummary[] {
+    return this.ctx.deps.intents?.list().intents ?? [];
   }
 
   /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */

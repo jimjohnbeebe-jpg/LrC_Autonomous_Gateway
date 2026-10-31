@@ -14,7 +14,7 @@ export { EMBEDDED_PROFILE, PIPELINES, WHITE_BALANCE_UNITS, pipelineOf, processVe
 export type { Pipeline } from "./pipeline.js";
 export type { ParamSpec } from "./canonical.js";
 export { lightroomLabel } from "./labels.js";
-export { AI_KINDS, KIND_LABELS, LOCAL_PARAMS, MASK_TABLE_KEY, MaskError, aiError, computed, isAiKind, pointOf, readTable, tableInfo, verifyTable } from "./mask-table.js";
+export { AI_KINDS, KIND_LABELS, LOCAL_PARAMS, MASK_TABLE_KEY, MaskError, aiError, amountOf, computed, isAiKind, pointOf, readTable, tableInfo, verifyTable } from "./mask-table.js";
 export type { AiKind, Correction, LocalParam, MaskKind } from "./mask-table.js";
 export { summarize } from "./mask-summary.js";
 export type { MaskSummary } from "./mask-summary.js";

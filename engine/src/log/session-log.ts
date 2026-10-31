@@ -225,6 +225,8 @@ export const sessionLogSchema = z
     guardrails: z.strictObject({ clip_high_pct: z.number(), clip_low_pct: z.number() }),
     /** Issue #130: the session's resolved clip_baseline (session\guardrail.ts correct). Absent in older logs, whose baseline always ran. */
     clip_baseline: z.boolean().optional(),
+    /** Engine 1.10.0 (Phase 10 R3): the session's tone mode (session\pass0.ts). Absent in older logs, whose tone mode was "set". */
+    tone_mode: z.enum(["set", "auto", "adapt"]).optional(),
     decay: z.array(z.number()),
     notes: z.string().nullable(),
     target: z.strictObject({

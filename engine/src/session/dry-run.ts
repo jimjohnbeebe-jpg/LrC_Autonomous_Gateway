@@ -10,7 +10,8 @@ import { planPass0 } from "./pass0.js";
 export function dryRun(ctx: SessionContext, c: Checked, advisory: string | null): SessionOutput {
   const { loaded, view, settings, photo } = c;
   const s = { intent: loaded, profile: c.args.profile ?? null };
-  const plan = (variant: Parameters<typeof planPass0>[4]) => planPass0(ctx.deps.map, s, view.pipeline, view.settings, variant);
+  // tone_mode "auto": the plan is the write after Lightroom's Auto Tone, whose values only Lightroom knows.
+  const plan = (variant: Parameters<typeof planPass0>[4]) => planPass0(ctx.deps.map, s, view.pipeline, view.settings, variant, c.toneMode === "auto");
   const variants = loaded.intent.variants;
   const copies = c.variantCount === null ? null : VARIANT_IDS.slice(0, c.variantCount).map((id) => ({ id, label: variants?.[id].label ?? id, pass0: plan(variants?.[id] ?? null) }));
   const hello = ctx.deps.client.hello();
@@ -26,12 +27,14 @@ export function dryRun(ctx: SessionContext, c: Checked, advisory: string | null)
       guardrails: { clip_high_pct: settings.clipHighPct, clip_low_pct: settings.clipLowPct },
       clip_baseline: clipBaseline,
       max_passes: settings.maxPasses,
+      tone_mode: c.toneMode,
       ...(copies ? { variants: copies } : { pass0: plan(null) }),
       start_off_zero: startOffZero(view.settings),
       notices: hello ? [...lightroomNotices(hello.lrc_version), ...updateNotices(hello.plugin_version, ctx.deps.engineVersion)] : [],
       ...(advisory ? { advisory } : {}),
       note:
         "Dry run: nothing was written, no snapshot was made and no session is open. `pass0.changes` is what pass 0 would write as one History step" +
+        `${c.toneMode === "auto" ? ", after Lightroom's Auto Tone, whose values only a real run shows" : ""}` +
         `${clipBaseline ? "; with clip_baseline it then pulls clipping in, which only a render shows" : ""}. Call lr_begin_session without dry_run to start.`,
     },
     log: { dry_run: true, intent_id: loaded.intent.id, target: { uuid: photo.uuid }, mode: c.mode },

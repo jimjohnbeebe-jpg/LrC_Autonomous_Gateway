@@ -46,6 +46,7 @@ export function newLog(ctx: SessionContext, s: Session, variantCount: number | n
     max_passes: s.maxPasses,
     guardrails: { clip_high_pct: s.limits.clipHighPct, clip_low_pct: s.limits.clipLowPct },
     clip_baseline: s.clipBaseline,
+    tone_mode: s.toneMode,
     decay: [...s.decay],
     notes,
     target: {

@@ -8,7 +8,7 @@
 //   - a number in `set` (schema v3) is the value itself, so it must be within the range;
 //   - a switch, a boolean or a curve is set as given, so it must be a value the params map writes.
 
-import { CAMERA_PROFILE_PARAM, CUSTOM_WHITE_BALANCE_PARAMS, PIPELINES, ParamError, SUPPORTED_PROCESS_VERSIONS, UnknownCameraProfileError, WHITE_BALANCE_UNITS, type ParamMap, type Pipeline } from "../params/index.js";
+import { CAMERA_PROFILE_PARAM, CUSTOM_WHITE_BALANCE_PARAMS, LOCAL_PARAMS, PIPELINES, ParamError, SUPPORTED_PROCESS_VERSIONS, UnknownCameraProfileError, WHITE_BALANCE_UNITS, type ParamMap, type Pipeline } from "../params/index.js";
 import { IntentError } from "./errors.js";
 import { intentSchema, type Intent, type PriorSet } from "./schema.js";
 import { versionProblem } from "./version.js";
@@ -66,7 +66,10 @@ export function checkIntent(candidate: unknown, map: ParamMap): Intent {
   checkSet("", intent);
   if (intent.variants) for (const key of ["A", "B", "C"] as const) checkSet(`variants.${key}.`, intent.variants[key]);
   problems.push(...setProblems(intent, checkValues));
-  if (intent.references !== undefined && intent.schema_version < 3) problems.push("schema_version: references need schema_version 3");
+  for (const field of ["references", "tone_mode", "masks"] as const) {
+    if (intent[field] !== undefined && intent.schema_version < 3) problems.push(`schema_version: ${field} ${field === "tone_mode" ? "needs" : "need"} schema_version 3`);
+  }
+  problems.push(...maskProblems(intent.masks ?? []));
   if (intent.profile !== undefined) problems.push(...profileProblems(map, intent.profile));
   if (problems.length > 0) throw new IntentError("invalid_intent", `the intent has invalid values: ${problems.join("; ")}`, problems);
   return intent;
@@ -88,6 +91,19 @@ function setProblems(intent: Intent, checkValues: (where: string, values: Values
   const priorNames = new Set([...Object.keys(intent.priors), ...PIPELINES.flatMap((p) => Object.keys(intent.priors_by_pipeline?.[p] ?? {}))]);
   const setNames = new Set([...Object.keys(shared), ...PIPELINES.flatMap((p) => Object.keys(intent.set_by_pipeline?.[p] ?? {}))]);
   for (const name of setNames) if (priorNames.has(name)) problems.push(`set.${name}: ${name} is also a prior; a value is either set (absolute) or a prior (added), not both`);
+  return problems;
+}
+
+/** A look's masks: each slider a local slider (params\mask-table.ts LOCAL_PARAMS) within the panel's range, as lr_create_mask takes it. */
+function maskProblems(masks: NonNullable<Intent["masks"]>): string[] {
+  const problems: string[] = [];
+  masks.forEach((m, i) => {
+    for (const [name, value] of Object.entries(m.sliders)) {
+      const p = LOCAL_PARAMS.get(name);
+      if (!p) problems.push(`masks.${i}.sliders.${name}: not a local slider (${[...LOCAL_PARAMS.keys()].join(", ")})`);
+      else if (!Number.isFinite(value) || value < p.min || value > p.max) problems.push(`masks.${i}.sliders.${name}: ${value} is outside ${p.min}..${p.max}`);
+    }
+  });
   return problems;
 }
 

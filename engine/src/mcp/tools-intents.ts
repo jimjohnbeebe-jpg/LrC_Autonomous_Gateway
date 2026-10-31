@@ -10,11 +10,19 @@
 
 import { takeMigrationNotes } from "../intents/index.js";
 import { PIPELINES } from "../params/index.js";
+import { brief, choosePreset, listPresets, presetSettings } from "../presets/index.js";
 import { ToolError } from "./errors.js";
-import { LOOK_LEFT_OUT, captureLook } from "./look-capture.js";
+import { LOOK_LEFT_OUT, captureLook, captureMasks, presetLook, type CapturedLook } from "./look-capture.js";
 import { library, pageBridgeUse, readPageFolders, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
-export type SaveIntentArgs = { intent: Record<string, unknown>; confirmed: boolean; replace?: boolean | undefined; from_photo?: boolean | undefined; dry_run?: boolean | undefined };
+export type SaveIntentArgs = {
+  intent: Record<string, unknown>;
+  confirmed: boolean;
+  replace?: boolean | undefined;
+  from_photo?: boolean | undefined;
+  from_preset?: string | undefined;
+  dry_run?: boolean | undefined;
+};
 export type DeleteIntentArgs = { id: string; confirmed: boolean };
 
 const notConfirmed = (what: string) => new ToolError("NOT_CONFIRMED", `Ask the user to approve ${what} in the chat first, then call again with confirmed: true.`, false);
@@ -55,19 +63,22 @@ export async function getIntent(ctx: ToolContext, args: { id: string }): Promise
 }
 
 export async function saveIntent(ctx: ToolContext, args: SaveIntentArgs): Promise<ToolOutput> {
-  return run(ctx, "lr_save_intent", args, args.from_photo === true ? { usesBridge: true } : pageBridgeUse(ctx), async () => {
+  const capture = args.from_photo === true ? "from_photo" : args.from_preset !== undefined ? "from_preset" : null;
+  return run(ctx, "lr_save_intent", args, capture ? { usesBridge: true } : pageBridgeUse(ctx), async () => {
     // The tool's schema requires `confirmed` to be a boolean; false is refused here. A dry run writes nothing, so needs no approval.
     if (args.confirmed !== true && args.dry_run !== true) {
       throw notConfirmed("this intent");
     }
+    if (args.from_photo === true && args.from_preset !== undefined) throw new ToolError("INVALID_ARGUMENTS", "Give from_photo or from_preset, not both.", false);
     // A capture is only a preview: the save takes the returned intent, so what is written is what the user
     // approved, even if the photo or its settings changed meanwhile (Greptile, PR #206).
-    if (args.from_photo === true && args.dry_run !== true) {
-      throw new ToolError("INVALID_ARGUMENTS", "from_photo works only with dry_run: true. Show the user the intent it returns, then save that intent unchanged (without from_photo) with confirmed: true.", false);
+    if (capture && args.dry_run !== true) {
+      throw new ToolError("INVALID_ARGUMENTS", `${capture} works only with dry_run: true. Show the user the intent it returns, then save that intent unchanged (without ${capture}) with confirmed: true.`, false);
     }
-    const { intent, photo } = args.from_photo === true ? await fromPhoto(ctx, args.intent) : { intent: args.intent, photo: null };
+    const captured = capture === "from_photo" ? await fromPhoto(ctx, args.intent) : capture === "from_preset" ? await fromPreset(ctx, args.intent, args.from_preset ?? "") : null;
+    const intent = captured?.intent ?? args.intent;
     const id = (intent as { id?: unknown }).id;
-    const from = photo ? { from_photo: photo } : {};
+    const from = captured && capture ? { [capture]: captured.info } : {};
     if (args.dry_run === true) {
       const checked = library(ctx).check(intent);
       return { json: { ok: true, dry_run: true, written: false, id, intent: checked, ...from }, log: { id, dry_run: true, ...from } };
@@ -79,40 +90,77 @@ export async function saveIntent(ctx: ToolContext, args: SaveIntentArgs): Promis
   });
 }
 
-/**
- * The candidate with the look of the photo selected in Lightroom (look-capture.ts): schema v3, the
- * photo's profile unless the candidate names one, and the photo's values under the candidate's own `set` values.
- */
-async function fromPhoto(ctx: ToolContext, candidate: Record<string, unknown>): Promise<{ intent: Record<string, unknown>; photo: Record<string, unknown> }> {
-  const { client, map } = ctx.deps;
-  await ctx.deps.ensureBridge();
-  const photo = await client.request("get_context", {});
-  const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings);
-  const look = captureLook(view, map.cameraProfiles());
+type Captured = { intent: Record<string, unknown>; info: Record<string, unknown> };
+
+/** The candidate with a captured look (look-capture.ts): schema v3, the look's profile unless the candidate names one, and its values under the candidate's own `set` values. */
+function withLook(candidate: Record<string, unknown>, look: CapturedLook): Record<string, unknown> {
   const own = (key: string): Record<string, unknown> => (candidate[key] as Record<string, unknown> | undefined) ?? {};
   const byPipeline = own("set_by_pipeline");
   const setByPipeline = Object.fromEntries(
     PIPELINES.map((p) => [p, { ...look.set_by_pipeline[p], ...(byPipeline[p] as Record<string, unknown> | undefined) }]).filter(([, v]) => Object.keys(v as object).length > 0),
   );
-  const intent: Record<string, unknown> = {
+  return {
     priors: {},
     ...candidate,
     schema_version: 3,
     ...(candidate["profile"] === undefined && look.profile ? { profile: look.profile } : {}),
     set: { ...look.set, ...own("set") },
     ...(Object.keys(setByPipeline).length ? { set_by_pipeline: setByPipeline } : {}),
+  };
+}
+
+const captured = (look: CapturedLook): number => Object.keys(look.set).length + PIPELINES.reduce((n, p) => n + Object.keys(look.set_by_pipeline[p] ?? {}).length, 0);
+const UNPINNED = { note: "the camera profile is not one the engine has pinned, so the look keeps each photo's profile" };
+
+/**
+ * The look of the photo selected in Lightroom; its AI masks with no geometry unless the candidate names its own `masks`;
+ * schema v3 tone_mode "adapt" unless the candidate names one (R3: T3 is the default for a look saved from an edit).
+ */
+async function fromPhoto(ctx: ToolContext, candidate: Record<string, unknown>): Promise<Captured> {
+  const { client, map } = ctx.deps;
+  await ctx.deps.ensureBridge();
+  const photo = await client.request("get_context", {});
+  const sdk = (await client.request("get_settings", { target_uuid: photo.uuid })).settings;
+  const view = map.fromSdk(sdk);
+  const look = captureLook(view, map.cameraProfiles());
+  const masks = captureMasks(sdk);
+  const intent: Record<string, unknown> = {
+    ...withLook(candidate, look),
     // Phase 10 row 8: the photo the look came from is its reference, unless the candidate names its own.
     references: candidate["references"] ?? { uuids: [photo.uuid] },
+    tone_mode: candidate["tone_mode"] ?? "adapt",
+    ...(candidate["masks"] === undefined && masks.masks.length > 0 ? { masks: masks.masks } : {}),
   };
   const info = {
     uuid: photo.uuid,
     filename: photo.filename ?? null,
     pipeline: view.pipeline,
-    captured: Object.keys(look.set).length + Object.keys(look.set_by_pipeline[view.pipeline] ?? {}).length,
+    captured: captured(look),
+    masks_captured: candidate["masks"] === undefined ? masks.masks.length : 0,
+    ...(masks.skipped.length ? { masks_skipped: masks.skipped } : {}),
     left_out: LOOK_LEFT_OUT,
-    ...(look.profile ? {} : { note: "the photo's camera profile is not one the engine has pinned, so the look keeps each photo's profile" }),
+    ...(look.profile ? {} : UNPINNED),
   };
-  return { intent, photo: info };
+  return { intent, info };
+}
+
+/**
+ * A Develop preset's settings as a look (look-capture.ts presetLook), the preset named by uuid or name (presets\lightroom.ts
+ * choosePreset: PRESET_NOT_FOUND, PRESET_AMBIGUOUS). `dropped` lists the preset's keys no canonical name reads.
+ */
+async function fromPreset(ctx: ToolContext, candidate: Record<string, unknown>, named: string): Promise<Captured> {
+  const { client, map } = ctx.deps;
+  await ctx.deps.ensureBridge();
+  const list = await listPresets(client);
+  const preset = choosePreset(list, list.some((p) => p.uuid === named) ? { preset_uuid: named } : { preset_name: named });
+  const look = presetLook(map, await presetSettings(client, preset));
+  const info = {
+    preset: brief(preset),
+    captured: captured(look),
+    ...(look.left_out.length ? { left_out: look.left_out, left_out_note: LOOK_LEFT_OUT } : {}),
+    ...(look.dropped.length ? { dropped: look.dropped, dropped_note: "the preset's settings that no canonical name reads (process version, modes, masks, a profile not pinned, ...): not in the look" } : {}),
+  };
+  return { intent: withLook(candidate, look), info };
 }
 
 export async function deleteIntent(ctx: ToolContext, args: DeleteIntentArgs): Promise<ToolOutput> {

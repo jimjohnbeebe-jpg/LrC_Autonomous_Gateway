@@ -93,6 +93,7 @@ function variantJson(s: Session, t: Target, p: Pass0): Record<string, unknown> {
     copy_name: t.copy_name,
     pass: `${t.passes}/${s.maxPasses}`,
     history_names: p.historyNames,
+    ...(p.auto ? { auto_tone: p.auto } : {}),
     pass0_applied: p.applied,
     guardrail_actions: p.actions,
     settings: p.view.settings,

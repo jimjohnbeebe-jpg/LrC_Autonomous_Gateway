@@ -1,9 +1,9 @@
 ---
 report: LOOKS-EVAL
 phase: "10"
-status: template
-authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-29. Observed, Numbers and Verdict: blank, for Jim's run."
-date: 2026-10-29
+status: observed
+authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-29; Observed and Numbers filled 2026-10-30 from the results files of Jim's run, which hold his L / R / T answers. Verdict: Jim's."
+date: 2026-10-30
 ---
 
 # LOOKS-EVAL: blind evaluation of two editing arms (Phase 10 row 6)
@@ -87,46 +87,49 @@ Results: `%TEMP%\LrC-AVG\looks-eval\<run>\`: `run.json` (the state, arms include
 
 ## Observed (Jim)
 
-*(Jim fills this in. Raw output and the results file path.)*
+Jim ran it on branch `phase-10/integration` (`de13101`, engine and plugin 1.10.0, Lightroom 15.6) and said "Tests and evals are done" [stated: Jim, 2026-10-30]. Everything below comes from the harness's files [handle: `%TEMP%\LrC-AVG\looks-eval\20261030-055012\looks_eval_2026-10-30T12-50-11-399Z.json` (edits, judging, reveal), `looks_eval_2026-10-31T01-42-49-841Z.json` (cleanup), `run.json`].
 
-- Run id:
-- Look id and source photo:
-- Photos selected:
-- Edits accepted / not accepted:
-- Time for the edits:
-- `Looks eval:` line:
-- `B won ... of ... (ties ...), p = ...` line:
-- `conclusive:` line:
-- `masters untouched:` line:
-- PowerShell L / R / T questions instead of a Lightroom dialog: confirmed? (y/n)
-- Notes on the pairs (what made one better):
+- Run id: `20261030-055012`.
+- Look: `jim_look_1`, saved with `--look-from` from Jim's edit of `20241130-_OZ80223.NEF` (`<Documents>\LrC-AVG\intents\jim_look_1.json`): schema v3, 69 `set` keys, `tone_mode` `"adapt"`, one `sky` mask with five local sliders, the source as its one reference. Arm A: no intent. No `--a-tone` / `--b-tone`.
+- Photos: 16 masters, `20241130-_OZ80224.NEF` to `_OZ80238.NEF` plus `20241130-_OZ80234-Edit.PSD`: the frames after the look's source, from the same shoot.
+- Edits: 32 of 32 accepted, none timed out. Passes: 28 edits took 3, 3 took 4, 1 took 2. 0.6-1.2 min each, median 0.8 min; the edits ran from 12:50 (the run's start) to 13:19 UTC, 29 min.
+- `Looks eval: WORKED`
+- `B won 16 of 16 (ties 0), p = 3.1e-5`
+- `conclusive: YES`
+- `masters untouched: YES` after the judging. The cleanup run's own re-read printed `masters untouched: NO`: 15 masters read back unchanged and one (`20241130-_OZ80226.NEF`) was not read ("timeout: get_settings: no response within 15000 ms"). That is a read that failed, not a setting that differs.
+- Cleanup: 32 copies removed (`run.json` `removed`).
+- The L / R / T questions in PowerShell instead of a Lightroom dialog: used for the whole run [stated: Jim, 2026-10-30, "the checks are done"].
+- Left / right was drawn per pair: B was on the left in 10 pairs and on the right in 6, and Jim picked B in every one.
+- Notes on the pairs: none given.
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Photos | |
-| Pairs judged | |
-| B wins | |
-| A wins | |
-| Ties | |
-| Non-tie pairs (n) | |
-| Sign-test p (two-sided, ties dropped) | |
-| Conclusive (n >= 16 and p < 0.05) | |
-| Masters untouched | |
-| Edits not accepted | |
-| Median minutes per edit | |
+| Photos | 16 |
+| Pairs judged | 16 |
+| B wins | 16 |
+| A wins | 0 |
+| Ties | 0 |
+| Non-tie pairs (n) | 16 |
+| Sign-test p (two-sided, ties dropped) | 3.1e-5 |
+| Conclusive (n >= 16 and p < 0.05) | YES |
+| Masters untouched | YES (after judging; cleanup re-read: 15 unchanged, 1 not read) |
+| Edits not accepted | 0 |
+| Median minutes per edit | 0.8 |
 
 ## Verdict
 
-*(Jim decides: go / conditional / no-go. The script's headline is a suggestion only.)*
+*(Jim decides: go / conditional / no-go.)* Suggested by Claude Code: **go** under R6 (conclusive, B won 16 of 16, at least 13 needed), for photos of the same shoot as the look's source. The run says nothing about photos of other shoots (Consequences).
 
 ## Consequences / open questions
 
-- If the look wins (conclusive, B at least 13 of 16), rows 7+8 and 9+10 build on it; if not, the plan says a feature that does not win ships switched off or is removed (vault `PHASE10_PLAN.md` "Third re-plan").
-- The PowerShell questions instead of a Lightroom dialog are Claude Code's choice, pending Jim's confirmation (Purpose).
-- `[unverified]`: that headless Claude Code (`claude -p`) runs a whole converge session of up to 8 passes within 20 min and looks at the previews it returns; `clients:check` ran one pass (`clients-run.ts` `EDIT_PROMPT`).
-- `[unverified]`: that a killed edit's open session is reverted by the next engine's recovery before that copy is edited again on `--resume` (`clients-judge.ts` `recovered`, `clients:check` T7).
+- The look won, conclusively. Rows 7+8 and 9+10 were in the run's engine, so the result covers the look as 1.10.0 applies it (tone mode `adapt`, its sky mask). It does not say which part made the difference: there was no arm with one feature switched off.
+- **Same shoot only.** The 16 photos came from the shoot the look was saved from, so the run shows that a look carries across one shoot. Whether it helps on photos from other shoots, the case R1's goal is about, is untested [inference]. That is a second run on 16 photos from different shoots: about 30 min of unattended edits [handle: this run, 32 edits in 29 min].
+- Answering in PowerShell: Jim used it for the whole run (Observed). For this check it now counts as following rule 04.
+- Seen in this run: headless Claude Code finished every converge session well inside 20 min (at most 1.2 min). It stopped after 2-4 passes of the 8 allowed, so whether it looks at every preview it gets is still [unverified].
+- `[unverified]`: that a killed edit's open session is reverted by the next engine's recovery before that copy is edited again on `--resume` (`clients-judge.ts` `recovered`, `clients:check` T7). Not exercised: nothing timed out.
+- The cleanup run's re-read prints `masters untouched: NO` when a master could not be read at all. Its headline could tell a failed read apart from a changed setting; a small harness fix, not made yet.
 - `[inference]`: the headless engines read the settings page's intents folder; the harness checks the arms' intents in the default user folder, so a look saved by `--look-from` is found by both only when the page names no other folder.
 - `[inference]`: blindness holds only if Jim does not watch the copies, the Deck or the History panel during the edits; the window and the copy names never name an arm.
 - `tone_mode` reaches the session only after the row 9+10 PR adds the begin argument; until then an arm's tone mode is text in the prompt.

@@ -35,6 +35,9 @@ return {
     LrSdkMinimumVersion = 13.0,
     LrToolkitIdentifier = 'com.lrcavg.gateway.dev',
     LrPluginName = "LrC-AVG (dev)",
+    -- Shown in the Status section of Plug-in Manager and in load-failure messages [handle: D:\Developer\LightRoom
+    -- Classic Dev Kit\Manual\Lightroom Classic SDK Guide.pdf (pdftotext), "LrPluginInfoUrl gives the URL of your web site"].
+    LrPluginInfoUrl = "https://foliovector.com/lrc-avg/",
     LrInitPlugin = 'PluginInit.lua',
     -- The settings section in File > Plug-in Manager (PRD section 6.2, AVG-006).
     LrPluginInfoProvider = 'PluginInfoProvider.lua',

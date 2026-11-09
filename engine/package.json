@@ -3,6 +3,7 @@
   "version": "1.10.0",
   "description": "LrC-AVG engine: stdio MCP server, metrics, session state and Lightroom bridge.",
   "license": "MIT",
+  "homepage": "https://foliovector.com/lrc-avg/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway.git",

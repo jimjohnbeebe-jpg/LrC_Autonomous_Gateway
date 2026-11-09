@@ -88,7 +88,7 @@ builds the unsigned `release\LrC-AVG-Setup-<version>.exe` and `release\SHA256SUM
 
 ### A release
 
-[`.github/workflows/release.yml`](../.github/workflows/release.yml) builds the same setup on GitHub's Windows runner. A tag `v<version>` (or `v<version>-rc.<n>`, a pre-release) that matches `engine/package.json` attaches the setup and `SHA256SUMS.txt` to a draft release, which is then published by hand. A pull request that changes `tools/setup/`, `hud/src-tauri/`, the lockfile or the workflow builds the setup without releasing it; its run keeps the files as the `setup` artifact. The setup is not signed: README "Why the setup is not signed", issue #171.
+[`.github/workflows/release.yml`](../.github/workflows/release.yml) builds the same setup on GitHub's Windows runner. A tag `v<version>` (or `v<version>-rc.<n>`, a pre-release) that matches `engine/package.json` attaches the setup, `lrc-avg-<version>.mcpb`, `LrC-AVG.lrplugin-<version>.zip` and `SHA256SUMS.txt` (all three listed) to a draft release, which is then published by hand. After publishing, update `server.json` (`version`, the `.mcpb` URL and its `fileSha256` from `SHA256SUMS.txt`) in a PR, then run `mcp-publisher publish` from the repo root to update the MCP Registry entry `io.github.jimjohnbeebe-jpg/lrc-avg` (`mcp-publisher login github` first; install: https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/quickstart.mdx). A pull request that changes `tools/setup/`, `hud/src-tauri/`, the lockfile or the workflow builds the setup without releasing it; its run keeps the files as the `setup` artifact. The setup is not signed: README "Why the setup is not signed", issue #171.
 
 ### The npm package and the plugin zip
 
@@ -96,7 +96,7 @@ builds the unsigned `release\LrC-AVG-Setup-<version>.exe` and `release\SHA256SUM
 npm run package
 ```
 
-writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine, its file list checked against `engine/src`) and `LrC-AVG.lrplugin-<version>.zip` (the plugin folder plus `LICENSE`). It packs the working tree [handle: `engine/src/devtools/package-cli.ts:11`], so build release assets from a clean checkout of the tagged commit. These two assets are not part of a release since the setup (Phase 9); installing from npm is issue #172. The package smoke test is `docs/reports/phase6/package-smoke/smoke.txt`.
+writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine, its file list checked against `engine/src`) and `LrC-AVG.lrplugin-<version>.zip` (the plugin folder plus `LICENSE`). It packs the working tree [handle: `engine/src/devtools/package-cli.ts:11`], so build release assets from a clean checkout of the tagged commit. It also writes `lrc-avg-<version>.mcpb`. The `.mcpb` and the zip are release assets (the release workflow runs `npm run package`; v1.10.0's were built from its tag and added on 2026-11-09); the `.tgz` is not, and installing from npm is issue #172. The package smoke test is `docs/reports/phase6/package-smoke/smoke.txt`.
 
 ## Other commands
 

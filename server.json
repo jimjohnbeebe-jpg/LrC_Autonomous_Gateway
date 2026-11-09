@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jimjohnbeebe-jpg/lrc-avg",
+  "title": "LrC-AVG",
+  "description": "An AI edits the selected photo in Lightroom Classic with native Develop sliders, pass by pass.",
+  "version": "1.10.0",
+  "websiteUrl": "https://foliovector.com/lrc-avg/",
+  "repository": { "url": "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway", "source": "github" },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases/download/v1.10.0/lrc-avg-1.10.0.mcpb",
+      "fileSha256": "10456cf3ff171f9fc90f13eb57be686ab1733135021cb6bd8b391f89fe1a379c",
+      "transport": { "type": "stdio" }
+    }
+  ]
+}

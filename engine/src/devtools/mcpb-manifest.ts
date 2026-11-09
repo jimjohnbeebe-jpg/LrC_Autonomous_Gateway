@@ -16,6 +16,9 @@ export type McpbManifest = {
   author: { name: string };
   license: string;
   repository: { type: string; url: string };
+  homepage: string;
+  support: string;
+  keywords: string[];
   server: { type: "node"; entry_point: string; mcp_config: { command: string; args: string[]; env: Record<string, string> } };
   tools: Array<{ name: string; description: string }>;
   user_config: Record<string, { type: "string"; title: string; description: string; default: string; required: boolean }>;
@@ -42,6 +45,11 @@ export function buildManifest(version: string, defs: ToolDef[]): McpbManifest {
     author: { name: "Jim Beebe" },
     license: "MIT",
     repository: { type: "git", url: "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway" },
+    // homepage, support and keywords are optional MCPB 0.3 fields [handle: https://github.com/modelcontextprotocol/mcpb/blob/main/MANIFEST.md
+    // "Field Definitions", read 2026-11-08]; where Claude Desktop shows them is [unverified].
+    homepage: "https://foliovector.com/lrc-avg/",
+    support: "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/issues",
+    keywords: ["lightroom", "lightroom-classic", "photo-editing", "raw", "develop"],
     server: {
       type: "node",
       entry_point: MCPB_ENTRY,

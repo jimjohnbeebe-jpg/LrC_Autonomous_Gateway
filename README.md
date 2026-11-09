@@ -6,6 +6,22 @@ One setup file installs everything: a Lightroom plugin, the engine that Claude D
 
 Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
 
+## See it work
+
+The website, **[foliovector.com/lrc-avg](https://foliovector.com/lrc-avg/)**, has the intro video (1:23) and two worked examples: a written brief, and three variants to pick from.
+
+[![The LrC-AVG intro video on foliovector.com](https://foliovector.com/video/lrc-avg-intro-2026-11-09-poster.webp)](https://foliovector.com/lrc-avg/#intro)
+
+A Painted Hills raw, edited from a brief typed into Claude Desktop ([the whole example](https://foliovector.com/lrc-avg/#ex1)):
+
+| Before, straight from the camera | After, the same raw edited in Lightroom |
+|---|---|
+| [![Before: the Painted Hills raw, flat and muddy under a grey sky](https://foliovector.com/img/gateway/painted-hills-before-960.webp)](https://foliovector.com/img/gateway/painted-hills-before-1920.webp) | [![After: the red and gold bands of the hills under heavy storm clouds](https://foliovector.com/img/gateway/painted-hills-after-960.webp)](https://foliovector.com/img/gateway/painted-hills-after-1920.webp) |
+
+The HUD in Lightroom during that edit, at pass 4 ([what it shows](#the-hud)):
+
+[![Pass 4: a new sky mask, four slider changes listed, clipping within limits](https://foliovector.com/img/gateway/hud-mask.webp)](https://foliovector.com/lrc-avg/#watch)
+
 ## What you need
 
 - Windows 10 or 11, 64-bit (tested on Windows 11 only).
